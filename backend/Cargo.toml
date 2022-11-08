@@ -8,4 +8,6 @@ edition = "2021"
 [dependencies]
 tokio = "1.0"
 rocket = "0.5.0-rc.2"
+bb8 = "0.8"
+bb8-postgres = "0.8.1"
 tokio-postgres = "0.7.7"

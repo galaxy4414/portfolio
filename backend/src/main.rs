@@ -2,18 +2,20 @@
 extern crate tokio_postgres;
 extern crate tokio;
 
+use bb8::Pool;
+use bb8_postgres::PostgresConnectionManager;
 use tokio_postgres::{NoTls};
 
 async fn test_db() -> Result<(), tokio_postgres::Error> {
-    let (client, connection) = tokio_postgres::connect("host=localhost user=postgres password=hello1234$#@! dbname=portfolio_test", NoTls).await?;
+    let pg_mgr = PostgresConnectionManager::new_from_stringlike(
+        "host=localhost user=postgres password=hello1234$#@! dbname=portfolio_test",
+        tokio_postgres::NoTls,
+    ).unwrap();
 
-    tokio::spawn(async move {
-        if let Err(e) = connection.await {
-            eprintln!("connection error: {}", e);
-        }
-    });
+    let pool = Pool::builder().build(pg_mgr).await.unwrap();
 
-    let ret =  client.query("SELECT id, name FROM tb_user;", &[]).await?;
+    let mut connection = pool.get().await.unwrap();
+    let ret = connection.query("SELECT id, name FROM tb_user", &[]).await.unwrap();
 
     for row in ret {
         let id: i32 = row.get(0);
